@@ -54,7 +54,8 @@ jobs:
           --cloud gcp \
           --cloud-region us-central1-c \
           --cloud-type=m+t4 \
-          --cloud-hdd-size=200
+          --cloud-hdd-size=200 \
+          --cloud-spot
   train-model:
     needs: deploy-runner
     runs-on: [self-hosted, cml-gpu]
