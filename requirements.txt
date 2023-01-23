@@ -4,7 +4,7 @@ fastai
 fastcore
 tqdm
 pillow
-dvc[s3]
+dvc[s3,gs]
 fastapi[all]
 python-box
 dvclive>=1.0
