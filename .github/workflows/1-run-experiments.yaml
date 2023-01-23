@@ -95,7 +95,7 @@ jobs:
           set -x
           # Install dependencies
           pip install -r requirements.txt
-          # dvc pull
+          dvc pull
           dvc repro
           dvc push
           cml pr create --squash --skip-ci .
