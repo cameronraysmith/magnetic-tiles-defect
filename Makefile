@@ -22,10 +22,11 @@ include .env
 export
 
 env_print: ## Print environment variables including those defined in ".env" file.
-	env | grep "GH_PAT\|GH_REPO\|GACD"
+	env | grep "GH_\|GCP_"
 
-ghsecrets: ## Update github secrets for GH_REPO from environment vars stored in GH_PAT and GACD.
+ghsecrets: ## Update github secrets for GH_REPO from environment vars stored in GH_PAT and GCP_GACD.
 	gh secret list --repo=$(GH_REPO)
-	gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(GACD)'
+	gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(GCP_GACD)'
 	gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
+	gh secret set GCP_SERVICE_ACCOUNT --repo="$(GH_REPO)" --body="$(GCP_SERVICE_ACCOUNT)"
 	gh secret list --repo=$(GH_REPO)
