@@ -1,50 +1,65 @@
 name: Run Experiment
 on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: true
   push:
-    branches:    
-      - 'exp*'
-    paths:
-      - "data/**"
-      - "src/**"
-      - "params.yaml"
-      - "dvc.*"
+    # branches:    
+    #   - 'exp*'
+    # paths:
+    #   - "data/**"
+    #   - "src/**"
+    #   - "params.yaml"
+    #   - "dvc.*"
+
+env:
+  # set these secrets via gh CLI or UI. See also:
+  # https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
+  REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }} 
+  TF_LOG_PROVIDER: DEBUG
+
 jobs:
   deploy-runner:
     runs-on: ubuntu-latest
-    environment: cloud
-    permissions:
-      contents: read
-      id-token: write
+    # environment: cloud
+    # permissions:
+    #   contents: read
+    #   id-token: write
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: iterative/setup-cml@v1
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-region: us-east-1
-          role-to-assume: arn:aws:iam::342840881361:role/SandboxUser
-      - name: cml runner
-        env:
-          # set these secrets via gh CLI or UI. See also:
-          # https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
-          REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      # - uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-region: us-east-1
+      #     role-to-assume: arn:aws:iam::342840881361:role/SandboxUser
+      - name: Deploy runner instance
+        # env:
+        #   REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        #   GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }} 
         run: |
-          cml runner \
-              --cloud=aws \
-              --cloud-region=us-east-1 \
-              --cloud-type=g4dn.xlarge \
-              --labels=cml-runner
+          cml runner launch \
+          --labels=cml-gpu \
+          --reuse-idle \
+          --cloud gcp \
+          --cloud-region us-central1-c \
+          --cloud-type=m+t4 \
+          --cloud-hdd-size=200
   train-model:
     needs: deploy-runner
-    runs-on: [self-hosted, cml-runner]
+    runs-on: [self-hosted, cml-gpu]
     container:
       image: iterativeai/cml:0-dvc2-base1
       options: --gpus all
-    environment: cloud
-    permissions:
-      contents: read
-      id-token: write
+    # environment: cloud
+    # permissions:
+    #   contents: read
+    #   id-token: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -52,19 +67,22 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.9"
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-region: us-east-1
-          role-to-assume: arn:aws:iam::342840881361:role/SandboxUser
+      # - uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-region: us-east-1
+      #     role-to-assume: arn:aws:iam::342840881361:role/SandboxUser
+      - name: Setup tmate session pre-training
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event.inputs.debug_enabled }}
       - name: cml setup
         run: cml ci
-        env:
-          REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        # env:
+        #   REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        #   GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }} 
       - name: dvc-repro-cml
-        env:
-          # set these secrets via gh CLI or UI. See also:
-          # https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
-          REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        # env:
+        #   REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        #   GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }} 
         run: |
           # Install dependencies
           pip install -r requirements.txt
