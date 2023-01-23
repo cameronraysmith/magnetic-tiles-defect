@@ -5,12 +5,15 @@
     "ghcr.io/devcontainers/features/nvidia-cuda:1": {
       "installCudnn": true
     },
-    "ghcr.io/rocker-org/devcontainer-features/miniforge:latest": {}
+    "ghcr.io/rocker-org/devcontainer-features/miniforge:latest": {
+      "version": "latest",
+      "variant": "Mambaforge"
+    }
   },
   "extensions": [
     "Iterative.dvc",
     "ms-python.python",
     "redhat.vscode-yaml"
   ],
-  "postCreateCommand": "pip install --user -r requirements.txt; python -m dvc pull; bash .devcontainer/nvtop_install.sh"
+  "postCreateCommand": "bash .devcontainer/setup.sh; bash .devcontainer/nvtop_install.sh"
 }
