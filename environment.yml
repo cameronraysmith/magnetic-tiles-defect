@@ -19,7 +19,7 @@ dependencies:
   - dvc=[version=">=2.30"]
   - dvc-s3
   - dvc-gs
-  - dvclive=0.12.1
+  - dvclive=[version=">=1.0"]
   - fastapi
   - pip
   - jupyter
