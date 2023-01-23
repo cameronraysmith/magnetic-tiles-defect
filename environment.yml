@@ -1,0 +1,33 @@
+name: mtd
+channels:
+  - conda-forge
+  - fastai
+  - nodefaults
+dependencies:
+  - python=3.9
+  - pytorch-gpu
+  - torchvision
+  - torchmetrics
+  - fastai
+  - fastcore
+  - tqdm
+  - pillow
+  - python-box
+  - uvicorn
+  - pytest
+  - mlflow
+  - dvc=[version=">=2.30"]
+  - dvc-s3
+  - dvc-gs
+  - dvclive=0.12.1
+  - fastapi
+  - pip
+  - jupyter
+  - awscliv2
+  # - pip:
+  #   - dvc[s3,gs]
+  #   - fastapi[all]
+
+# prefix: /opt/conda/bin/envs
+# mamba env create -p /opt/conda/bin/envs/mtd -f environment.yml
+
