@@ -25,6 +25,7 @@ env:
   # https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
   REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }} 
+  GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }} 
   TF_LOG_PROVIDER: DEBUG
 
 jobs:
@@ -55,6 +56,7 @@ jobs:
           --cloud-region us-central1-c \
           --cloud-type=m+t4 \
           --cloud-hdd-size=200 \
+          --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw" \
           --cloud-spot
   train-model:
     needs: deploy-runner
@@ -96,16 +98,18 @@ jobs:
           dvc pull
           dvc repro
           dvc push
-          cml pr --squash --skip-ci .
+          cml pr create --squash --skip-ci .
 
           ### Create CML report ###
           echo "## Metrics" >> report.md
           dvc metrics show --md >> report.md
           echo "## A few random test images" >> report.md
-          for file in $(ls data/test_preds/ |sort -R |tail -10); do
-            cml publish data/test_preds/$file --md >> report.md
+          for file in $(ls data/test_preds/ | sort -R | tail -10); do
+            # cml publish data/test_preds/$file --md >> report.md
+            echo '!'"[$file](./data/test_preds/$file)" >> report.md
           done
           #########################
 
-          cml send-comment --pr --update report.md
+          # cml send-comment --pr --update report.md
+          cml comment update --target=pr report.md
           set +x
